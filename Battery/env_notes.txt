@@ -1,0 +1,25 @@
+
+#### To ensure results are reproducible, in terminal: use conda to create a virtual environment and install the necessary packages in requirements.txt ####
+# conda env list
+# conda create -n AIUK python=3.8
+# conda activate AIUK
+# conda list -n AIUK or conda list
+
+# conda install numpy=1.21.0 pymc3 pickle pandas dash plotly scipy
+# conda install -c conda-forge matplotlib
+# conda install -c conda-forge numpy=1.21.0
+# conda install -c conda-forge pandas
+# conda install -c conda-forge scipy
+# conda install -c conda-forge dash
+# conda install -n UK-AI pip
+# conda install -c defaults pymc3=3.11.5
+
+# if pymc3 is not available, use pip to install it
+# before using pip, you have to activate the env: conda activate AIUK
+# pip install pymc3==3.11.4
+# Note that this can potentially cause issues with package dependencies, so it is generally better to use Conda to manage packages whenever possible.
+
+# conda env export > environment.yml
+# conda create --name AIUK --file requirements.txt
+
+# conda env update --prefix ./env --file environment.yml  --prune
