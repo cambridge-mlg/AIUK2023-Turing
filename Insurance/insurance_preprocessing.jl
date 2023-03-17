@@ -271,7 +271,7 @@ observe_variables = ["insured_sex",
 
 # for oberse_var in observe_variables
 #     df_groupBy = combine(groupby(df, [Symbol(oberse_var), :fraud_reported]), nrow => :count)
-#     display(groupedbar(df_groupBy[:, oberse_var], df_groupBy[:, "count"], group = df_groupBy[:, "fraud_reported"], ylabel = "Scores", title = "Number of claims by $oberse_var"))
+#     display(groupedbar(df_groupBy[:, oberse_var], df_groupBy[:, "count"], group = df_groupBy[:, "fraud_reported"], ylabel = "Number", title = "Number of claims by $oberse_var"))
 # end
 
 close("all")
@@ -352,8 +352,8 @@ X_mat_test_catOHE = Matrix(df_test[:, setdiff(all_features_ohe, numeric_cols)])
 X_mat_test = hcat(X_mat_test_normalised, X_mat_test_catOHE)
 X_df_test = DataFrame(X_mat_test, Symbol.([numeric_cols..., setdiff(all_features_ohe, numeric_cols)...]))
 
-y_train = df_train[:, response]
-y_test = df_test[:, response]
+y_train = vec(df_train[:, response])
+y_test = vec(df_test[:, response])
 
 ## save the train and test DataFrame using JLD2
 @save joinpath(results_folder, "processed insurance data.jld2") X_df_train X_df_test y_train y_test cs

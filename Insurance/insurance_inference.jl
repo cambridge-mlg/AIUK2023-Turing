@@ -59,13 +59,13 @@ BLR_model = logistic_regression(X_df_train, y_train, 1.0)
 
 ## sample from the posterior
 if inference == true
-    chain = sample(BLR_model, NUTS(0.65), 200, progress=true)
+    chain = sample(BLR_model, NUTS(0.65), 300, progress=true)
     write(joinpath(results_folder,"insurance_chain_turing.jls"), chain)
 else 
-    chain = read(joinpath(results_folder,"insurance_chain_turing.jls"))
+    chain = read(joinpath(results_folder,"insurance_chain_turing.jls"), Chains)
 end
 size(chain)
-p = StatsPlots.plot(chain[:, 1:10, 1]) # plot the posterior distribution of parameters
+p = StatsPlots.plot(chain[:, 1:5, 1]) # plot the posterior distribution of parameters
 Plots.savefig(p, joinpath(results_folder,"inferred posterior.svg"))
 
 # bivariate (2D) distribution of samples of continuous variables
@@ -104,7 +104,8 @@ function predict(X_df, chain, chain_no, threshold)
     return probs, Int.(predictions)
 end
 y_test_preds_prob, y_test_preds = predict(X_df_test, chain, 1, 0.5)
-@save joinpath(results_folder, "y_test_preds_prob.jld2") y_test_preds_prob
+# @save joinpath(results_folder, "y_test_preds_prob.jld2") y_test_preds_prob
+write(joinpath(results_folder,"y_test_preds_prob.jls"), y_test_preds_prob)
 
 p=Plots.plot(1:size(y_test, 1), Int.(y_test_preds), color=:blue)
 Plots.plot!(1:size(y_test, 1), Int.(y_test), color=:red)

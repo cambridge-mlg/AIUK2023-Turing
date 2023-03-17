@@ -136,8 +136,8 @@ from julia.api import Julia
 import base64
 
 # load static figures from /images
-with open(images_folder+'/battery 2RC diagram.svg', "rb") as PK_model_diagram_file:
-    battery_model_diagram_data = base64.b64encode(PK_model_diagram_file.read())
+with open(images_folder+'/battery 2RC diagram.svg', "rb") as battery_model_diagram_file:
+    battery_model_diagram_data = base64.b64encode(battery_model_diagram_file.read())
     battery_model_diagram_data = battery_model_diagram_data.decode()
     battery_model_diagram_data = "data:image/svg+xml;base64,{}".format(battery_model_diagram_data)
 with open(images_folder+'/battery model equation.svg', "rb") as battery_model_equation_file:
@@ -199,7 +199,7 @@ page_1 = html.Div(style={'display': 'flex', 'flex-wrap': 'wrap', 'justify-conten
                     html.Div(style={'width': '100%', 'text-align': 'center'}, children=[html.H1(children=['Battery Modelling using the probabilistic programming language ',  html.Span('Turing.jl', style={'color': 'red', 'font-style': 'italic'}), ' and Cloud Analytics Platform ', html.Span('withdata', style={'color': 'red', 'font-style': 'italic'})], style={'vertical-align': 'top', 'color': 'purple'})]),
 
                     # second row: Left column
-                    html.Div(style={'width': '35%'}, children=[html.Img(id="PK_model_diagram", src=battery_model_diagram_data, alt="my image", width="700", height="500", className="img_class", style={'text-align': 'right'})]),
+                    html.Div(style={'width': '35%'}, children=[html.Img(id="battery_model_diagram", src=battery_model_diagram_data, alt="my image", width="700", height="500", className="img_class", style={'text-align': 'right'})]),
 
                     # second row: middle column
                     html.Div(style={'width': '40%'}, children=[html.H3("Equivalent Circuit Model (ECM) [1,3]", style={'text-align': 'center', 'font-style': 'italic'}),
