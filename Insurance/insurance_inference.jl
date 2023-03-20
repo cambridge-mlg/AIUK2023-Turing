@@ -18,6 +18,8 @@ using MLDataUtils
 using Distributions
 using DynamicPPL
 using Turing
+using ReverseDiff
+Turing.setadbackend(:reversediff)
 using Random
 Random.seed!(111)
 
@@ -31,7 +33,7 @@ using ROCAnalysis
 using NamedArrays
 # using ROC
 
-inference = false
+inference = true
 
 #### Modelling ####
 ## (1) load prepared data
@@ -59,7 +61,7 @@ BLR_model = logistic_regression(X_df_train, y_train, 1.0)
 
 ## sample from the posterior
 if inference == true
-    chain = sample(BLR_model, NUTS(0.65), 300, progress=true)
+    chain = sample(BLR_model, NUTS(0.65), 500, progress=true)
     write(joinpath(results_folder,"insurance_chain_turing.jls"), chain)
 else 
     chain = read(joinpath(results_folder,"insurance_chain_turing.jls"), Chains)

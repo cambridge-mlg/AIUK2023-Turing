@@ -7,28 +7,14 @@
 # conda install pymc3 Numpy=1.21.0 pickle pandas dash plotly scipy julia base64
 
 import os
-os.chdir('/home/yongchao/Desktop/UK-AI')
+wd = "/home/yongchao/Desktop/AIUK" + "/Estrogen" 
+results_folder = wd + "/results"
+images_folder = wd + "/images"
 
 t = [0,1,2,3,4,6,8,10,12,16,24]; y = [0,25,100,132,90,82,60,55,32,15,4]
 
-from julia.api import Julia
-# from julia import Main
 
 ##### build the app ######
-# lsof -i :8051
-# kill -9 164233
-# # check if the port is occupied
-# import os
-# import subprocess
-# result = subprocess.run(['lsof', '-i', ':8051'], stdout=subprocess.PIPE)
-# if result.returncode == 0:
-#     # if the port is occupied, get the list of PIDs and kill them
-#     output = result.stdout.decode('utf-8')
-#     for line in output.split('\n'):
-#         if 'LISTEN' in line:
-#             pid = line.split()[1]
-#             os.system(f'kill -9 {pid}')  
-
 import numpy as np
 import pandas as pd
 import dash
@@ -43,47 +29,47 @@ from julia.api import Julia
 import base64
 
 j = Julia(compiled_modules=False)
-j.eval("""using MCMCChains; chain = read("/home/yongchao/Desktop/new julia/UK-AI/estrogen_chain.jls", Chains)""")
+j.eval(f"""using MCMCChains; chain = read(joinpath("{results_folder}", "estrogen_chain.jls"), Chains)""")
 
 # load the figures
-with open('/home/yongchao/Desktop/new julia/UK-AI/Estrogen/local_cloud.png', "rb") as local_cloud_file:
+with open(images_folder+'/local_cloud.png', "rb") as local_cloud_file:
     local_cloud_data = base64.b64encode(local_cloud_file.read())
     local_cloud_data = local_cloud_data.decode()
     local_cloud_data = "{}{}".format("data:image/jpg;base64, ", local_cloud_data)
-with open('/home/yongchao/Desktop/new julia/UK-AI/Estrogen/estrogen_equation.png', "rb") as estrogen_model_equation_file:
+with open(images_folder+'/estrogen_equation.png', "rb") as estrogen_model_equation_file:
     estrogen_model_equation_data = base64.b64encode(estrogen_model_equation_file.read())
     estrogen_model_equation_data = estrogen_model_equation_data.decode()
     estrogen_model_equation_data = "{}{}".format("data:image/jpg;base64, ", estrogen_model_equation_data)
-with open('/home/yongchao/Desktop/new julia/UK-AI/Estrogen/probabilistic_model.png', "rb") as probabilistic_model_file:
+with open(images_folder+'/probabilistic_model.png', "rb") as probabilistic_model_file:
     probabilistic_model_data = base64.b64encode(probabilistic_model_file.read())
     probabilistic_model_data = probabilistic_model_data.decode()
     probabilistic_model_data = "{}{}".format("data:image/jpg;base64, ", probabilistic_model_data)
-with open('/home/yongchao/Desktop/new julia/UK-AI/Estrogen/least_squares_fit.png', "rb") as least_squares_fit_file:
+with open(images_folder+'/least_squares_fit.png', "rb") as least_squares_fit_file:
     least_squares_fit_data = base64.b64encode(least_squares_fit_file.read())
     least_squares_fit_data = least_squares_fit_data.decode()
     least_squares_fit_data = "{}{}".format("data:image/jpg;base64, ", least_squares_fit_data)
-with open('/home/yongchao/Desktop/new julia/UK-AI/Estrogen/advantage.png', "rb") as advantage_file:
+with open(images_folder+'/advantage.png', "rb") as advantage_file:
     advantage_data = base64.b64encode(advantage_file.read())
     advantage_data = advantage_data.decode()
     advantage_data = "{}{}".format("data:image/jpg;base64, ", advantage_data)
 
-with open('/home/yongchao/Desktop/new julia/UK-AI/Estrogen/posterior_predictive_allData.png', "rb") as posterior_predictive_allData_file:
+with open(images_folder+'/posterior_predictive_allData.png', "rb") as posterior_predictive_allData_file:
     posterior_predictive_all_data = base64.b64encode(posterior_predictive_allData_file.read())
     posterior_predictive_all_data = posterior_predictive_all_data.decode()
     posterior_predictive_all_data = "{}{}".format("data:image/jpg;base64, ", posterior_predictive_all_data)
-with open('/home/yongchao/Desktop/new julia/UK-AI/Estrogen/posterior_predictive_singleData.png', 'rb') as posterior_predictive_singleData:
+with open(images_folder+'/posterior_predictive_singleData.png', 'rb') as posterior_predictive_singleData:
     posterior_predictive1_data = base64.b64encode(posterior_predictive_singleData.read())
     posterior_predictive1_data = posterior_predictive1_data.decode()
     posterior_predictive1_data = "{}{}".format("data:image/jpg;base64, ", posterior_predictive1_data)
-with open('/home/yongchao/Desktop/new julia/UK-AI/Estrogen/posterior_predictive_twoData.png', 'rb') as posterior_predictive_twoData:
+with open(images_folder+'/posterior_predictive_twoData.png', 'rb') as posterior_predictive_twoData:
     posterior_predictive2_data = base64.b64encode(posterior_predictive_twoData.read())
     posterior_predictive2_data = posterior_predictive2_data.decode()
     posterior_predictive2_data = "{}{}".format("data:image/jpg;base64, ", posterior_predictive2_data)
-with open('/home/yongchao/Desktop/new julia/UK-AI/Estrogen/posterior_predictive_threeData1.png', 'rb') as posterior_predictive31_file:
+with open(images_folder+'/posterior_predictive_threeData1.png', 'rb') as posterior_predictive31_file:
     posterior_predictive31_data = base64.b64encode(posterior_predictive31_file.read())
     posterior_predictive31_data = posterior_predictive31_data.decode()
     posterior_predictive31_data = "{}{}".format("data:image/jpg;base64, ", posterior_predictive31_data)
-with open('/home/yongchao/Desktop/new julia/UK-AI/Estrogen/posterior_predictive_threeData2.png', 'rb') as posterior_predictive32_file:
+with open(images_folder+'/posterior_predictive_threeData2.png', 'rb') as posterior_predictive32_file:
     posterior_predictive32_data = base64.b64encode(posterior_predictive32_file.read())
     posterior_predictive32_data = posterior_predictive32_data.decode()
     posterior_predictive32_data = "{}{}".format("data:image/jpg;base64, ", posterior_predictive32_data)
