@@ -18,6 +18,8 @@ using MLDataUtils
 using Distributions
 using DynamicPPL
 using Turing
+using ReverseDiff
+Turing.setadbackend(:reversediff)
 using Random
 Random.seed!(111)
 
@@ -59,7 +61,7 @@ BLR_model = logistic_regression(X_df_train, y_train, 1.0)
 
 ## sample from the posterior
 if inference == true
-    chain = sample(BLR_model, NUTS(0.65), 300, progress=true)
+    chain = sample(BLR_model, NUTS(0.65), 500, progress=true)
     write(joinpath(results_folder,"insurance_chain_turing.jls"), chain)
 else 
     chain = read(joinpath(results_folder,"insurance_chain_turing.jls"), Chains)
@@ -74,16 +76,22 @@ Plots.savefig(p, joinpath(results_folder,"inferred posterior.svg"))
 # Plots.savefig(p, joinpath(results_folder,"inferred posterior bivariate plot.svg"))
 
 ## (3) test performance
-function predict(X_df, chain, chain_no, threshold)
+function predict(X_df, chain, chain_no, threshold, mean_or_MAP)
     X_mat = Matrix(X_df)
-    # Pull the means from each parameter's sampled values in the chain.
-    intercept = mean(chain[:, :intercept, chain_no])
     coefficient_values  = Vector(undef, size(X_mat, 2))
 
-    for j in 1:length(coefficient_values)
-        coefficient_values[j] = mean(chain[:, names(chain)[j+1], chain_no])
+    # Pull the means from each parameter's sampled values in the chain.
+    if mean_or_MAP=="mean"
+        intercept = mean(chain[:, :intercept, chain_no])
+        for j in 1:length(coefficient_values)
+            coefficient_values[j] = mean(chain[:, names(chain)[j+1], chain_no])
+        end
+    elseif mean_or_MAP=="MAP"
+        intercept = mode(chain[:, :intercept, chain_no])
+        for j in 1:length(coefficient_values)
+            coefficient_values[j] = mode(chain[:, names(chain)[j+1], chain_no])
+        end
     end
-
     # Retrieve the number of rows.
     n, _ = size(X_mat)
 
@@ -103,8 +111,8 @@ function predict(X_df, chain, chain_no, threshold)
     end
     return probs, Int.(predictions)
 end
-y_test_preds_prob, y_test_preds = predict(X_df_test, chain, 1, 0.5)
-# @save joinpath(results_folder, "y_test_preds_prob.jld2") y_test_preds_prob
+y_test_preds_prob, y_test_preds = predict(X_df_test, chain, 1, 0.5, "MAP")
+@JLD2.save joinpath(results_folder, "y_test_preds_prob.jld2") y_test_preds_prob
 write(joinpath(results_folder,"y_test_preds_prob.jls"), y_test_preds_prob)
 
 p=Plots.plot(1:size(y_test, 1), Int.(y_test_preds), color=:blue)
@@ -113,43 +121,23 @@ xlabel!(p, "Customer ID")
 ylabel!(p, "Fraud or Not")
 Plots.savefig(p, joinpath(results_folder,"Test performance: predicted labels.svg"))
 
-cm = EvalMetrics.ConfusionMatrix(y_test, Int.(y_test_preds))
-confusion_mat = NamedArray(getproperty.(Ref(cm), [:tn :fn ; :fp :tp]), 
-               (["0", "1"], ["0", "1"]), 
-               ("pred", "true"))
-# alternatively, y_test_preds can be calculated as
-labels = y_test_preds.==y_test
-mean(labels)
-sum(labels)
+# Compute number of true positives, false positives, false negatives, and true negatives
+tp = sum(y_test .== 1 .& y_test_preds .== 1)
+fp = sum(y_test .== 0 .& y_test_preds .== 1)
+fn = sum(y_test .== 1 .& y_test_preds .== 0)
+tn = sum(y_test .== 0 .& y_test_preds .== 0)
 
-# ROC curve
-any(ismissing.(y_test))
-# EvalMetrics.rocplot(y_test, y_test_preds_prob)
-# plot the ROC Curve
-# roc_data = MLBase.roc(y_test, y_test_preds_prob, [0, 1])
-# test_roc = roc_data.roc
-# fpr, tpr = roc_data.fprs[2], roc_data.tprs[2]
-# plot(fpr, tpr, title="ROC Curve", label="Model",
-#      xlabel="False Positive Rate", ylabel="True Positive Rate", legend=:bottomright)
-# # Add a diagonal reference line
-# plot!([0, 1], [0, 1], color=:black, linestyle=:dash, label="Random")
-# p=Plots.plot(test_roc, label="test performance")
-# Plots.savefig(p, joinpath(results_folder,"Test performance: ROC.svg"))
+# Compute accuracy, precision, and F1 score
+acc = (tp + tn) / (tp + fp + fn + tn)
+precision = tp / (tp + fp)
+recall = tp / (tp + fn)
+f1 = 2 * precision * recall / (precision + recall)
 
-# F1 score
-f1 = EvalMetrics.f1_score(y_test, y_test_preds)
-f1
-
-# Accuracy: note that, accuray doesn't tell the full pic if the data is highly imbalanced.
-accuracy = EvalMetrics.accuracy(y_test, y_test_preds)
-accuracy
-
-# Precision
-precision = EvalMetrics.precision(y_test, y_test_preds)
-precision
-
-# Recall
-recall = EvalMetrics.recall(y_test, y_test_preds)
+# Print results
+println("Accuracy: $(round(acc, digits=2))")
+println("Precision: $(round(precision, digits=2))")
+println("Recall: $(round(recall, digits=2))")
+println("F1 score: $(round(f1, digits=2))")
 
 # uncertainty estimation for posterior predictives
 function predict_withUncertainty(X_df, chain, chain_no, start_idx, batch_size, no_batches, threshold)

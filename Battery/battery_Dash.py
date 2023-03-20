@@ -418,4 +418,4 @@ def update_plot(rt, r1, t1, r2, t2, noise_std, dropdown):
     return fig1, fig2, fig3, remaining_life
 
 if __name__ == '__main__':
-    app.run_server('0.0.0.0', port=8051, debug=True)
+    app.run_server('0.0.0.0', port=8051)

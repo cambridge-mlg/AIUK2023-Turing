@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 from plotly.subplots import make_subplots
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score, auc, recall_score, accuracy_score, precision_score, f1_score
 
+model = "LR"
+
 # helper functions
 def classification_evaluate(y_test, y_pred_probs, threshold=0.5):
     """
@@ -109,18 +111,24 @@ print(chain_dict)
 chain_dict.keys()
 
 # (3) Load predictions
-# j.eval(f"""using JLD2; y_test_preds_prob=read(joinpath("{results_folder}","y_test_preds_prob.jld2"))""")
-j.eval(f"""@load joinpath("{results_folder}","y_test_preds_prob.jld2") y_test_preds_prob""")
-y_test_preds_prob_julia_array = j.eval("y_test_preds_prob")
-# py_array = julia_array.tolist()
-y_test_preds_prob = np.array(y_test_preds_prob_julia_array)
-y_test_preds_prob.shape
+j.eval(f"""@JLD2.load joinpath("{results_folder}","y_test_preds_prob.jld2") y_test_preds_prob""")
+y_test_preds_prob_julia_array_LR = j.eval("y_test_preds_prob")
+y_test_preds_prob_LR = np.array(y_test_preds_prob_julia_array_LR)
+
+j.eval(f"""@JLD2.load joinpath("{results_folder}","y_test_preds_prob_BNN.jld2") y_test_preds_prob""")
+y_test_preds_prob_julia_array_BNN = j.eval("y_test_preds_prob")
+y_test_preds_prob_BNN = np.array(y_test_preds_prob_julia_array_BNN)[0]
+
+if model == "LR":
+    y_test_preds_prob = y_test_preds_prob_LR
+elif model == "BNN":
+    y_test_preds_prob = y_test_preds_prob_BNN
 
 # Plot the ROC curve
 plot_roc_curve_matplot(y_test, y_test_preds_prob)
 
 # confusion matrix and summary metrics
-confusion_mat, metrics = classification_evaluate(y_test, y_test_preds_prob, threshold=0.6)
+confusion_mat, metrics = classification_evaluate(y_test, y_test_preds_prob, threshold=0.5)
 print('Confusion Matrix:\n', confusion_mat, '\n')
 print('Summary Metrics:\n', metrics)
 
@@ -203,7 +211,7 @@ pio.templates.default = "plotly_white" #plotly_dark, ggplot2, seaborn, simple_wh
 page_1 = html.Div(style={'display': 'flex', 'flex-wrap': 'wrap', 'justify-content': 'space-evenly', 'align-items': 'center'}, children=[
                     html.Div(style={'height': '200px'}), # space div: doing nothing
                     # First row
-                    html.Div(style={'width': '100%', 'text-align': 'center'}, children=[html.H1(children=['Insurance fraud detection using the probabilistic programming language ',  html.Span('Turing.jl', style={'color': 'red', 'font-style': 'italic'}), ' and Cloud Analytics Platform ', html.Span('withdata', style={'color': 'red', 'font-style': 'italic'})], style={'vertical-align': 'top', 'color': 'purple'})]),
+                    html.Div(style={'width': '100%', 'text-align': 'center'}, children=[html.H1(children=['Insurance fraud detection using the probabilistic programming language ',  html.Span('Turing.jl', style={'color': 'red', 'font-style': 'italic'}), ' and cloud analytics platform ', html.Span('withdata', style={'color': 'red', 'font-style': 'italic'})], style={'vertical-align': 'top', 'color': 'purple'})]),
 
                     # new row
                     html.H2(children=['Data Pre-processing Pipeline: Cleaning, Missing Imputation, Exploratory Data Analysis, Feature Engineering ...'], style={'width': '100%', 'text-align': 'center', 'color': 'black'}),
@@ -316,7 +324,7 @@ page_2 = html.Div(style={'display': 'flex', 'flex-wrap': 'wrap', 'justify-conten
                 ])
 
 page_3 = html.Div(style={'display': 'flex', 'flex-wrap': 'wrap', 'width': '100%', 'justify-content': 'center'}, children=[        
-                    html.H1('Test Performance & Informed Decision Making', style={'vertical-align': 'top', 'color': 'purple'}),
+                    html.H1('Test Performance & Informed Decision Making: LR model', style={'vertical-align': 'top', 'color': 'purple'}),
                     
                     html.Div(style={'width': '100%', 'justify-content': 'center'}, children=[html.H2('Skillfulness of classifier')]),
                     html.Div(style={'width': '100%', 'display': 'flex', 'flex-direction': 'row', 'justify-content': 'center'}, children=[
@@ -325,11 +333,11 @@ page_3 = html.Div(style={'display': 'flex', 'flex-wrap': 'wrap', 'width': '100%'
                         ]),
                         html.Div(style={'width': '30%'}, children=[
                             html.H3("Confusion Matrix, Recall, Accuracy, Precision"),
-                            html.Div(id='output-metrics')
+                            html.Div(id='output-metrics-page3')
                         ]),
                         html.Div(style={'width': '40%'}, children=[
                             dcc.Graph(
-                                id='scatter-plot',
+                                id='scatter-plot-page3',
                                 figure=go.Figure(
                                     go.Scatter(
                                         x=np.arange(len(y_test_preds_prob)),
@@ -375,7 +383,77 @@ page_3 = html.Div(style={'display': 'flex', 'flex-wrap': 'wrap', 'width': '100%'
                     
                     html.Div(style={'width': '25%', 'justify-content': 'center'}, children=[
                         dcc.Slider(
-                            id='threshold-slider',
+                            id='threshold-slider-page3',
+                            min=0,
+                            max=1,
+                            step=0.01,
+                            value=0.5,
+                            marks={0: '0', 0.5: '0.5', 1: '1'}
+                        ),
+                    ]),
+                ])
+
+page_4 = html.Div(style={'display': 'flex', 'flex-wrap': 'wrap', 'width': '100%', 'justify-content': 'center'}, children=[        
+                    html.H1('Test Performance & Informed Decision Making: BNN model', style={'vertical-align': 'top', 'color': 'purple'}),
+                    
+                    html.Div(style={'width': '100%', 'justify-content': 'center'}, children=[html.H2('Skillfulness of classifier')]),
+                    html.Div(style={'width': '100%', 'display': 'flex', 'flex-direction': 'row', 'justify-content': 'center'}, children=[
+                        html.Div(style={'width': '30%', 'justify-content': 'center'}, children=[
+                            dcc.Graph(figure=plot_roc_curve_plotly(y_test, y_test_preds_prob_BNN), id='roc-curve')
+                        ]),
+                        html.Div(style={'width': '30%'}, children=[
+                            html.H3("Confusion Matrix, Recall, Accuracy, Precision"),
+                            html.Div(id='output-metrics-page4')
+                        ]),
+                        html.Div(style={'width': '40%'}, children=[
+                            dcc.Graph(
+                                id='scatter-plot-page4',
+                                figure=go.Figure(
+                                    go.Scatter(
+                                        x=np.arange(len(y_test_preds_prob_BNN)),
+                                        y=y_test_preds_prob_BNN,
+                                        mode='markers',
+                                        marker=dict(
+                                            color=np.where(y_test_preds_prob_BNN > 0.5, 'red', 'black'),
+                                            symbol=np.where(y_test == 1, 'star', 'circle'),
+                                            size=np.where(y_test == 1, 10, 5),
+                                        )
+                                    ),
+                                    layout=go.Layout(
+                                        title='Predicted Probabilities',
+                                        xaxis=dict(title='Customer ID'),
+                                        yaxis=dict(title='Probability'),
+                                        shapes=[
+                                            # Add horizontal line at y=0
+                                            dict(
+                                                type='line',
+                                                x0=0,
+                                                x1=len(y_test_preds_prob_BNN),
+                                                y0=0,
+                                                y1=0,
+                                                line=dict(color='gray', dash='dash')
+                                            ),
+                                            # Add horizontal line at y=1
+                                            dict(
+                                                type='line',
+                                                x0=0,
+                                                x1=len(y_test_preds_prob_BNN),
+                                                y0=1,
+                                                y1=1,
+                                                line=dict(color='gray', dash='dash')
+                                            )
+                                        ]
+                                    )
+                                ),
+                            ),
+                        ]),
+                    ]),
+                    
+                    html.Div(style={'width': '100%', 'justify-content': 'center'}, children=[html.H2("User-defined threshold to suit different business needs", style={'width': '100%','text-align': 'center'})]),
+                    
+                    html.Div(style={'width': '25%', 'justify-content': 'center'}, children=[
+                        dcc.Slider(
+                            id='threshold-slider-page4',
                             min=0,
                             max=1,
                             step=0.01,
@@ -389,6 +467,7 @@ page_dropdown_options = [
     {'label': 'Page 1', 'value': 'page-1'},
     {'label': 'Page 2', 'value': 'page-2'},
     {'label': 'Page 3', 'value': 'page-3'},
+    {'label': 'Page 4', 'value': 'page-4'},
 ]
 
 # Define the app layout
@@ -417,7 +496,8 @@ def display_page(value):
         return page_2
     elif value == 'page-3':
         return page_3
-
+    elif value == 'page-4':
+        return page_4
 
 # Define the callback to update the grouped bar chart when the dropdown value changes for observe_var in page_1
 @app.callback(
@@ -544,10 +624,21 @@ def update_divs(selected_value):
     trace_graph = dcc.Graph(id='trace-graph', figure=trace_fig)
     return hist_graph, trace_graph
 
+# Define the callback to update the density plot when the dropdown value changes
+@app.callback(
+    dash.dependencies.Output('density-plot', 'figure'),
+    [dash.dependencies.Input('density-dropdown', 'value')]
+)
+def update_density_plot(column):
+    # Create a kernel density plot for the selected column
+    fig = px.histogram(df, x=column, color='fraud_reported', nbins=50, histfunc='count')
+    # fig.update_layout(title=f'Histogram for {column}')
+    return fig
+
 # Define the callback for updating the plot and metrics in page_3 when the slider values change
 @app.callback(
-    [Output('scatter-plot', 'figure'), Output('output-metrics', 'children')],
-    [Input('threshold-slider', 'value')]
+    [Output('scatter-plot-page3', 'figure'), Output('output-metrics-page3', 'children')],
+    [Input('threshold-slider-page3', 'value')]
 )
 def update_scatter_plot(threshold):
     # Update the color of the markers based on the threshold
@@ -619,16 +710,81 @@ def update_scatter_plot(threshold):
         html.P(f"Precision: {precision:.2f}")
     ]
 
-# Define the callback to update the density plot when the dropdown value changes
+
+# Define the callback for updating the plot and metrics in page_4 when the slider values change
 @app.callback(
-    dash.dependencies.Output('density-plot', 'figure'),
-    [dash.dependencies.Input('density-dropdown', 'value')]
+    [Output('scatter-plot-page4', 'figure'), Output('output-metrics-page4', 'children')],
+    [Input('threshold-slider-page4', 'value')]
 )
-def update_density_plot(column):
-    # Create a kernel density plot for the selected column
-    fig = px.histogram(df, x=column, color='fraud_reported', nbins=50, histfunc='count')
-    # fig.update_layout(title=f'Histogram for {column}')
-    return fig
+def update_scatter_plot(threshold):
+    # Update the color of the markers based on the threshold
+    marker_color = np.where(y_test_preds_prob_BNN > threshold, 'red', 'black')
+    marker_symbol = np.where(y_test == 1, 'star', 'circle')
+
+    # Update the layout to include the threshold line
+    layout = go.Layout(
+        title='Bayesian Neural Network Predicted Probabilities',
+        xaxis=dict(title='Customer ID'),
+        yaxis=dict(title='Probability'),
+        shapes=[
+            # Add horizontal line at y=0
+            dict(
+                type='line',
+                x0=0,
+                x1=len(y_test_preds_prob_BNN),
+                y0=0,
+                y1=0,
+                line=dict(color='gray', dash='dash')
+            ),
+            # Add horizontal line at y=1
+            dict(
+                type='line',
+                x0=0,
+                x1=len(y_test_preds_prob_julia_array_BNN),
+                y0=1,
+                y1=1,
+                line=dict(color='gray', dash='dash')
+            ),
+            # Add horizontal line at user-defined threshold
+            dict(
+                type='line',
+                x0=0,
+                x1=len(y_test_preds_prob_BNN),
+                y0=threshold,
+                y1=threshold,
+                line=dict(color='red')
+            )
+        ]
+    )
+    
+    # Create the updated figure with the new marker colors and layout
+    fig = go.Figure(
+        go.Scatter(
+            x=np.arange(len(y_test_preds_prob_BNN)),
+            y=y_test_preds_prob_BNN,
+            mode='markers',
+            marker=dict(
+                color=marker_color,
+                size=np.where(y_test == 1, 10, 5),
+                symbol=marker_symbol
+            )
+        ),
+        layout=layout
+    )
+
+    y_pred = np.where(y_test_preds_prob_julia_array_BNN >= threshold, 1, 0)[0]
+    confusion_mat = confusion_matrix(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred)
+    
+    # Return the updated figure and output metrics
+    return fig, [
+        html.P(f"Confusion Matrix: {confusion_mat}"),
+        html.P(f"Recall: {recall:.2f}"),
+        html.P(f"Accuracy: {accuracy:.2f}"),
+        html.P(f"Precision: {precision:.2f}")
+    ]
 
 if __name__ == '__main__':
-    app.run_server('0.0.0.0', port=8051, debug=True)
+    app.run_server('0.0.0.0', port=8051)
