@@ -33,7 +33,7 @@ using ROCAnalysis
 using NamedArrays
 # using ROC
 
-inference = false
+inference = true
 
 #### Modelling ####
 ## (1) load prepared data
