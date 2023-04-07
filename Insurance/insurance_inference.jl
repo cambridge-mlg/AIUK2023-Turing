@@ -33,7 +33,7 @@ using ROCAnalysis
 using NamedArrays
 # using ROC
 
-inference = true
+inference = false
 
 #### Modelling ####
 ## (1) load prepared data
@@ -69,6 +69,9 @@ end
 size(chain)
 p = StatsPlots.plot(chain[:, 1:5, 1]) # plot the posterior distribution of parameters
 Plots.savefig(p, joinpath(results_folder,"inferred posterior.svg"))
+
+chain_df = DataFrame(chain)
+CSV.write(joinpath(results_folder,"chain_df.csv"), chain_df)
 
 # bivariate (2D) distribution of samples of continuous variables
 # selected_parameters = names(chain)[1:4]
