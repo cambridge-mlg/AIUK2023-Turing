@@ -155,7 +155,7 @@ import Distributions: Censored
         log_partial_likelihood = log(λ[i]) - log(n_risk)
         
         # compute log of one minus risk
-        log_one_minus_risk = log(sum(exp.(log_partial_likelihood)))
+        log_one_minus_risk = log(sum(exp.(log_partial_likelihood))+esp())
         
         # include censoring indicator
         if event[i]
