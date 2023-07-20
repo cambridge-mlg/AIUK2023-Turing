@@ -1,9 +1,9 @@
 
 #### To ensure results are reproducible, in terminal: use conda to create a virtual environment and install the necessary packages in requirements.txt ####
 # conda env list
-# conda create -n AIUK python=3.8
-# conda activate AIUK
-# conda list -n AIUK or conda list
+# conda create -n AIUK2023 python=3.8
+# conda activate AIUK2023
+# conda list -n AIUK2023 or conda list
 
 # conda install numpy=1.21.0 pymc3 pickle pandas dash plotly scipy
 # conda install -c conda-forge matplotlib
@@ -15,7 +15,7 @@
 # conda install -c defaults pymc3=3.11.5
 
 # if pymc3 is not available, use pip to install it
-# before using pip, you have to activate the env: conda activate AIUK
+# before using pip, you have to activate the env: conda activate AIUK2023
 # pip install pymc3==3.11.4
 # Note that this can potentially cause issues with package dependencies, so it is generally better to use Conda to manage packages whenever possible.
 
